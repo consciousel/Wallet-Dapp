@@ -1,4 +1,4 @@
-# Wallet DApp
+# DApp Wallet
 ```
 
 Example of integration:
