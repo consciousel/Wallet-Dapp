@@ -1,17 +1,31 @@
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import React, { Component } from 'react';
-import { getChainByKeyValue, getChain, getAllChains } from 'evm-chains';
+import { getAllChains } from 'evm-chains';
 import Web3Modal from 'web3modal';
 import Navbar from './Navbar';
 import Main from './Main';
 
 var Web3 = require('web3');
-var INFURA_API_KEY = "ee0a76ad6de8448f933dad70e2d4ad54";
+var INFURA_API_KEY = process.env.INFURA_API_KEY;
 
 class App extends Component {
 
   async UNSAFE_componentWillMount() {
     await this.init()
+  }
+
+  // Define filter function to identify connected network
+  async getNetwork(_chainId) {
+    let _network;
+
+    const allChains = await getAllChains();
+    for (let i=0; i<allChains.length; i++) {
+      if (allChains[i].chainId === _chainId) {
+        _network = allChains[i].network;
+      }
+      console.log('Network', _network);
+      return _network;
+    }
   }
 
   /** Settings for:
@@ -53,7 +67,7 @@ class App extends Component {
           console.log("Account: " + this.state.account, "Balance: " + this.state.balance);
         } else if(this.state.provider === null){
           this.setState({account: null, balance: null, network: null, loading: true})
-          network = await getChainByKeyValue(window.ethereum.chainId);
+          network = await this.getNetwork(parseInt(this.state.provider.networkVersion));
           balance = await web3.eth.getBalance(accounts[0])
           this.setState({account: accounts[0], balance: balance, loading: false })
           console.log("Account: " + this.state.account, "Balance: " + this.state.balance);
@@ -69,9 +83,9 @@ class App extends Component {
           this.setState({balance: balance})
         }
 
-        network = await getChainByKeyValue(window.ethereum.chainId);
+        network = await this.getNetwork(parseInt(this.state.provider.networkVersion));
         console.log('New Network: ' + network);
-        this.setState({ network: network.chain, loading: false, onlyNetwork: false})
+        this.setState({ network: network, loading: false, onlyNetwork: false})
         console.log("Account: " + this.state.account, "Balance: " + this.state.balance, "Network: " + this.state.network);
       });
     }
@@ -94,19 +108,15 @@ class App extends Component {
 
       this.setState({ loading: true, provider: null }) 
 
-      console.log("isMetaMask: " + provider.isMetaMask);
       if(provider.isMetaMask){ // When MetaMask was chosen as a provider
         account = provider.selectedAddress;
-        const allChains = await getAllChains();
-        // console.log('ChainId: ', provider.networkVersion, 'AllChain: ', allChains);
-        network = await getChainByKeyValue(provider.networkVersion); 
-        // console.log('ChainId: ', provider.networkVersion, 'Network: ', network);
+        network = await this.getNetwork(parseInt(provider.networkVersion)); 
         web3 = new Web3(Web3.givenProvider);
         balance = await web3.eth.getBalance(provider.selectedAddress);
       } else if (provider.wc){ // When WalletConect was chosen as a provider
         if(provider.accounts[0]!=='undefined') {
           account = await provider.accounts[0];
-          network = await getChainByKeyValue(provider.chainId);
+          network = await this.getNetwork(parseInt(provider.networkVersion));
           web3 = new Web3(new Web3.providers.HttpProvider(network.rpc[0]));
           balance = await web3.eth.getBalance(account);
         } else { //handle problem with providing data
@@ -127,7 +137,7 @@ class App extends Component {
         account: account,
         balance: balance,
         provider: provider,
-        network: network.chain
+        network: network
       })
 
     } catch(e) {
@@ -147,7 +157,7 @@ class App extends Component {
         balance = await web3.eth.getBalance(provider.selectedAddress);
       } else if (provider.wc){
         account = provider.accounts[0];
-        network = await getChainByKeyValue(provider.chainId);
+        network = await this.getNetwork(parseInt(provider.networkVersion));
         web3 = new Web3(new Web3.providers.HttpProvider(network.rpc[0]));
         balance = await web3.eth.getBalance(account);
       }
@@ -162,19 +172,19 @@ class App extends Component {
       if(provider.isMetaMask && provider.selectedAddress!==null){
         web3 = new Web3(provider);
         balance = await web3.eth.getBalance(provider.selectedAddress);
-        network = await getChainByKeyValue(provider.chainId);
+        network = await this.getNetwork(parseInt(provider.networkVersion));
       } else if(provider.wc){
         account = provider.accounts[0];
-        network = await getChainByKeyValue(provider.chainId);
+        network = await this.getNetwork(parseInt(provider.networkVersion));
         web3 = new Web3(new Web3.providers.HttpProvider(network.rpc[0]));
         balance = await web3.eth.getBalance(account);
-        this.setState({ balance: balance, network: network.chain, loading: false });
+        this.setState({ balance: balance, network: network, loading: false });
       } else if (provider.selectedAddress===null){
-        network = await getChainByKeyValue(provider.chainId);
+        network = await this.getNetwork(parseInt(provider.networkVersion));
         this.setState({ network: network.chain, loading: false });
       }
 
-      this.setState({ balance: balance, network: network.chain, loading: false });
+      this.setState({ balance: balance, network: network, loading: false });
     });
   }
 
@@ -194,8 +204,8 @@ class App extends Component {
 
         //In case if MetaMask is installed
         if(window.ethereum){
-          const network = await getChainByKeyValue(window.ethereum.chainId);
-          this.setState({network: network.chain})
+          const network = await this.getNetwork(parseInt(this.state.provider.networkVersion));
+          this.setState({network: network})
         } else {
           this.setState({network: null})
         }
@@ -221,8 +231,8 @@ class App extends Component {
         provider: null
       })
       if(window.ethereum){
-        const network = await getChainByKeyValue(window.ethereum.chainId);
-        this.setState({network: network.chain})
+        const network = await this.getNetwork(parseInt(this.state.provider.networkVersion));
+        this.setState({network: network})
       } else {
         this.setState({network: null})
       }
