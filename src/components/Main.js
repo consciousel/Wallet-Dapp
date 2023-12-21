@@ -76,6 +76,7 @@ class Main extends Component {
               <tr className="bg-dark text-white">
                 <th>Account</th>
                 <th>Balance</th>
+                <th>Chain</th>
                 <th>Network</th>
               </tr>
               <tr>
@@ -126,6 +127,17 @@ class Main extends Component {
                               <b>{(this.props.balance/10**18).toFixed(5)}</b>
                               <img src={eth} className="align-text-bottom" height="20" alt="id" />
                             </td>
+                }{ !  this.props.chain && ! this.props.loading && ! this.props.onlyNetwork //Update Chain
+                   ?  <td style={{ width: '125px'}}>
+                        ---
+                      </td>
+                   :  ! this.props.chain && this.props.loading && this.props.onlyNetwork
+                        ? <td style={{ width: '125px'}}>
+                            <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+                          </td>
+                        : <td style={{ width: '125px'}}>
+                            <b>{this.props.chain}</b>
+                          </td>
                 }{ !  this.props.network && ! this.props.loading && ! this.props.onlyNetwork //Update Network
                    ?  <td style={{ width: '125px'}}>
                         ---
