@@ -75,7 +75,7 @@ class Main extends Component {
             <thead>
               <tr className="bg-dark text-white">
                 <th>Account</th>
-                <th>Balance</th>
+                <th>Eth-Balance</th>
                 <th>Chain</th>
                 <th>Network</th>
               </tr>
@@ -112,18 +112,18 @@ class Main extends Component {
                                   }
                                 </td>
                 }{ !  this.props.balance && ! this.props.loading //Update Balance
-                   ?  <td style={{ width: '125px'}}>
+                   ?  <td style={{ width: '145px'}}>
                         ---
                       </td>
                    :  ! this.props.balance && this.props.loading && ! this.props.onlyNetwork
-                        ? <td style={{ width: '125px'}}>
+                        ? <td style={{ width: '145px'}}>
                             <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
                           </td>
                         : ! this.props.balance && this.props.loading && this.props.onlyNetwork
-                          ?  <td style={{ width: '125px'}}>
+                          ?  <td style={{ width: '145px'}}>
                               ---
                              </td>
-                          : <td style={{ width: '125px' }}>
+                          : <td style={{ width: '145px' }}>
                               <b>{(this.props.balance/10**18).toFixed(5)}</b>
                               <img src={eth} className="align-text-bottom" height="20" alt="id" />
                             </td>
@@ -181,10 +181,102 @@ class Main extends Component {
                       </div>
 
             }
+            <span>
+            <p></p>&nbsp;
+                { !  this.props.account && ! this.props.loading //Update "Send ether to another address" Button
+
+                  ?  <button className="send-button" onClick={(e) => this.props.openForm}>&nbsp;&nbsp;</button>
+                  :  !  this.props.account && this.props.loading && ! this.props.onlyNetwork
+                     ?  <div className="form-popup" id="sendEther">
+                          <form action="action_page.php" className="form-container">
+                            <h2>Send Ether</h2>
+
+                            <label>
+                                Recipient Address:
+                                <input 
+                                    type="text" 
+                                    placeholder="Enter Recipient Wallet Address" 
+                                    onChange= {(e) => this.props.recipientAddressChangeHandler(e)}
+                                    name="address" 
+                                    required
+                                />
+                            </label>
+
+                            <label>  
+                                Amount:                  
+                                <input 
+                                    type="integer" 
+                                    placeholder="Enter Amount in Wei"
+                                    onChange= {(e) => this.props.amountChangeHandler(e)}
+                                    name="amount" 
+                                    required
+                                />
+                            </label>
+
+                            <button
+                                type="submit"
+                                onClick={(e) => this.props.sendEther(e)}
+                                className="btn btn-primary btn-sm mx-auto"
+                                ><b>Send Ether</b>
+                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span className="sr-only">Loading...</span>
+                            </button>
+                            <button type="button" className="btn cancel" onClick={this.props.closeForm}>Cancel</button>
+                          </form>
+                        </div>
+                     :  ! this.props.account && this.props.loading && this.props.onlyNetwork
+                        ? <div className="row text">&nbsp;&nbsp;</div>
+                        : <div className="row text-center text-monospace">
+                            <button
+                              type="open-button"
+                              onClick={(e) => this.props.openForm()}
+                              className="btn btn-primary btn-sm mx-auto"
+                              style={{ width: '375px', fontSize: '17px' }}
+                              ><b>Send Ether</b>
+                            </button>
+
+                            <div className="form-popup" id="myForm">
+                                <form action="action_page.php" className="form-container">
+                                    <h1>Send Ether</h1>
+
+                                    <label>
+                                        Recipient Address:
+                                        <input 
+                                            type="text" 
+                                            placeholder="Enter Recipient Wallet Address" 
+                                            onChange= {(e) => this.props.recipientAddressChangeHandler(e)}
+                                            name="address" 
+                                            required
+                                        />
+                                    </label>
+
+                                    <label>  
+                                        Amount:                  
+                                        <input 
+                                            type="integer" 
+                                            placeholder="Enter Ether Amount"
+                                            onChange= {(e) => this.props.amountChangeHandler(e)}
+                                            name="amount" 
+                                            required
+                                        />
+                                    </label>
+
+                                    <button
+                                      type="submit"
+                                      onClick={(e) => this.props.sendEther(e)}
+                                      className="btn btn-primary btn-sm mx-auto"
+                                      ><b>Send Ether</b>
+                                    </button>
+                                    <button type="button" className="btn cancel" onClick={this.props.closeForm}>Cancel</button>
+                                </form>
+                            </div>
+                          </div>
+                }
+            </span>
         </main>
       </div>
     );
-  }
-}
+  };
+};
 
 export default Main;

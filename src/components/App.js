@@ -7,11 +7,13 @@ import Main from './Main';
 
 var Web3 = require('web3');
 var INFURA_API_KEY = process.env.INFURA_API_KEY;
+var transferAmount;
+var recipientAddress;
 
 class App extends Component {
 
   async UNSAFE_componentWillMount() {
-    await this.init()
+    await this.init();
   }
 
   // Identify connected network
@@ -49,60 +51,60 @@ class App extends Component {
       disableInjectedProvider: false, // Declare MetaMask
     });
 
-    this.setState({web3Modal: web3Modal})
+    this.setState({web3Modal: web3Modal});
 
     //Settings for only MetaMask
     if(typeof window.ethereum!=='undefined'){
-      let network, balance, web3
+      let network, balance, web3;
 
       window.ethereum.autoRefreshOnNetworkChange = false;
-      web3 = new Web3(Web3.givenProvider)
-      this.setState({web3: web3})
+      web3 = new Web3(Web3.givenProvider);
+      this.setState({web3: web3});
 
       //Update address&account when MM user change account
       window.ethereum.on('accountsChanged', async (accounts) => {
         if(typeof accounts[0] === 'undefined'){
-          this.setState({ account: null, balance: null, provider: null})
+          this.setState({ account: null, balance: null, provider: null});
           console.log("Account: " + this.state.account, "Balance: " + this.state.balance);
         } else if(this.state.provider === null){
-          this.setState({account: null, balance: null, loading: true})
-          balance = await web3.eth.getBalance(accounts[0])
-          this.setState({account: accounts[0], balance: balance, loading: false })
+          this.setState({account: null, balance: null, loading: true});
+          balance = await web3.eth.getBalance(accounts[0]);
+          this.setState({account: accounts[0], balance: balance, loading: false });
           console.log("Account: " + this.state.account, "Balance: " + this.state.balance);
         }
       });
 
       //Update network when MM user change account network
       window.ethereum.on('chainChanged', async (chainId) => {
-        this.setState({network: null, chain: null, balance: null, loading: true, onlyNetwork: true})
+        this.setState({network: null, chain: null, balance: null, loading: true, onlyNetwork: true});
 
         if(this.state.account){
-          balance = await web3.eth.getBalance(this.state.account)
-          this.setState({balance: balance})
+          balance = await web3.eth.getBalance(this.state.account);
+          this.setState({balance: balance});
         }
 
         network = await this.getNetwork(parseInt(Web3.givenProvider.chainId, 16));
-        this.setState({ network: network.network, chain: network.chain, loading: false, onlyNetwork: false})
+        this.setState({ network: network.network, chain: network.chain, loading: false, onlyNetwork: false});
       });
     }
-  }
+  };
 
   /**
     * "Connect" button, selecting provider via Web3Modal
   */ 
   async on(event) {
-    event.preventDefault()
+    event.preventDefault();
 
     // Restore provider session
     await this.state.web3Modal.clearCachedProvider();
-    let provider, account, network, balance, web3
+    let provider, account, network, balance, web3;
     
     try {      
       // Activate windows with providers (MM and WC) choice
       provider = await this.state.web3Modal.connect();
-      console.log('Provider: ', provider)
+      console.log('Provider: ', provider);
 
-      this.setState({ loading: true, provider: null }) 
+      this.setState({ loading: true, provider: null });
 
       if(provider.isMetaMask){ // When MetaMask was chosen as a provider
         account = provider.selectedAddress;
@@ -202,9 +204,9 @@ class App extends Component {
         //In case if MetaMask is installed
         if(window.ethereum){
           const network = await this.getNetwork(parseInt(this.state.provider.chainId, 16));
-          this.setState({network: network.network, chain: network.chain})
+          this.setState({network: network.network, chain: network.chain});
         } else {
-          this.setState({network: null, chain: null})
+          this.setState({network: null, chain: null});
         }
       } else if (this.state.provider!==null && this.state.provider.isMetaMask){
         await this.state.provider.close // Disconnect Web3Modal+MetaMask
@@ -218,10 +220,10 @@ class App extends Component {
   }
 
   async offQr(event) {
-    event.preventDefault()
+    event.preventDefault();
 
     if(this.state.provider.wc){
-      await this.state.provider.disconnect()
+      await this.state.provider.disconnect();
       this.setState({
         account: null,
         balance: null,
@@ -229,9 +231,9 @@ class App extends Component {
       })
       if(window.ethereum){
         const network = await this.getNetwork(parseInt(this.state.provider.chainId, 16));
-        this.setState({network: network.network, chain: network.chain})
+        this.setState({network: network.network, chain: network.chain});
       } else {
-        this.setState({network: null, chain: null})
+        this.setState({network: null, chain: null});
       }
     }
   }
@@ -240,21 +242,21 @@ class App extends Component {
     * "Send 1 Wei to yourself" button
   */
   async send(event){
-    event.preventDefault()
+    event.preventDefault();
 
     if(this.state.provider===null && !this.state.account) {
-      window.alert('Error')
+      window.alert('Error');
     } else if (this.state.provider===null && this.state.account) { //MetaMask
-      this.state.web3.eth.sendTransaction({from: this.state.account, to: this.state.account, value: '1'}).on('error', (e) => window.alert('Error'))
+      this.state.web3.eth.sendTransaction({from: this.state.account, to: this.state.account, value: '1'}).on('error', (e) => window.alert('Error'));
     } else if(this.state.provider.isMetaMask || this.state.provider===null){ //Web3Modal+MetaMask
-      this.state.web3.eth.sendTransaction({from: this.state.account, to: this.state.account, value: '1'}).on('error', (e) => window.alert('Error'))
+      this.state.web3.eth.sendTransaction({from: this.state.account, to: this.state.account, value: '1'}).on('error', (e) => window.alert('Error'));
     } else if (this.state.provider.wc){  //Web3Modal+WalletConnect
-      window.alert('Accept on phone')
+      window.alert('Accept on phone');
 
       //Declare data for JSON RPC request
-      const from = this.state.account
-      const to = this.state.account
-      const value = 1 //wei
+      const from = this.state.account;
+      const to = this.state.account;
+      const value = 1; //wei
 
       //Request
       const tx = {
@@ -263,13 +265,81 @@ class App extends Component {
       }
 
       try {
-        await this.state.provider.request(tx) //Send request
+        await this.state.provider.request(tx); //Send request
       } catch (error) {
-        console.log('error: ', error)
+        console.log('error: ', error);
         return;
       }
     }
   }
+
+  /**
+   *  Handle input values
+  */
+  async recipientAddressChangeHandler(event) {
+    event.preventDefault();
+
+    recipientAddress = event.target.value;
+    this.setState({ recipientAddress: recipientAddress});
+  };
+
+  async amountChangeHandler(event) {
+    event.preventDefault();
+
+    transferAmount = Web3.utils.toWei(event.target.value, 'ether');
+    this.setState({ transferAmount: transferAmount});
+    console.log('amount in wei: ', transferAmount);
+  };
+
+  async openForm() {
+    document.getElementById("myForm").style.display = "block";
+  }
+
+  async closeForm() {
+    document.getElementById("myForm").style.display = "none";
+  }
+
+  /**
+    *  Send Ether to another wallet address
+    *  Takes the transfer amount value and the recipient address
+    *  
+  */
+  async sendEther(event) {
+    event.preventDefault()
+
+    console.log("Function Called Successfully!");
+    console.log('Account: ', this.state.account, 'Address: ', this.state.recipientAddress, 'Amount: ', this.state.transferAmount, 'Provider: ', this.state.provider);
+
+    if(this.state.provider===null && !this.state.account) {
+      window.alert('Error');
+    } else if (this.state.provider===null && this.state.account) { //MetaMask
+      this.state.web3.eth.sendTransaction({from: this.state.account, to: this.state.recipientAddress, value: this.state.transferAmount}).on('error', (e) => window.alert('Error'));
+    } else if(this.state.provider.isMetaMask || this.state.provider===null){ //Web3Modal+MetaMask
+      this.state.web3.eth.sendTransaction({from: this.state.account, to: this.state.recipientAddress, value: this.state.transferAmount}).on('error', (e) => window.alert('Error'));
+    } else if (this.state.provider.wc){  //Web3Modal+WalletConnect
+      window.alert('Accept on phone');
+
+      //Declare Data for JSON RPC request
+      const from = this.state.account;
+      const to = this.state.recipientAddress;
+      const value = this.state.transferAmount;
+
+      console.log('To Address: ', to, 'Amount: ', value);
+
+      //Request 
+      const tx = {
+        "method": "eth_sendTransaction",
+        "params": [{ from, to, value }]
+      }
+
+      try {
+        await this.state.provider.request(tx); //Send request
+      } catch (error) {
+        console.log('error: ', error);
+        return;
+      }
+    }
+  };
 
   constructor(props) {
     super(props)
@@ -286,7 +356,12 @@ class App extends Component {
     this.on = this.on.bind(this)
     this.off = this.off.bind(this)
     this.send = this.send.bind(this)
+    this.sendEther = this.sendEther.bind(this)
     this.offQr = this.offQr.bind(this)
+    this.recipientAddressChangeHandler = this.recipientAddressChangeHandler.bind(this)
+    this.amountChangeHandler = this.amountChangeHandler.bind(this)
+    this.openForm = this.openForm.bind(this)
+    this.closeForm = this.closeForm.bind(this)
   }
 
   render() {
@@ -300,6 +375,7 @@ class App extends Component {
         />&nbsp;
         <Main
           send={this.send}
+          sendEther={this.sendEther}
           offQr={this.offQr}
           account={this.state.account}
           balance={this.state.balance}
@@ -308,10 +384,14 @@ class App extends Component {
           chain={this.state.chain}
           provider={this.state.provider}
           onlyNetwork={this.state.onlyNetwork}
+          recipientAddressChangeHandler={this.recipientAddressChangeHandler}
+          amountChangeHandler={this.amountChangeHandler}
+          openForm={this.openForm}
+          closeForm={this.closeForm}
         />
       </div>
-    );
+    )
   }
-}
+};
 
 export default App;
